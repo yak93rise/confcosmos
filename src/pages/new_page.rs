@@ -195,8 +195,14 @@ pub fn handle_new(app: &mut App, key: KeyEvent) {
             );
         }
         NewResult::Save => {
+            // 源路径 = 前缀 + 输入，创建对应文件夹（含嵌套目录），
+            // 确保之后可以把文件放进源目录。
+            let origin_path = join_origin_path(&app.config.origin_path_prefix, p_origin(app));
+            if !origin_path.is_empty() {
+                let _ = std::fs::create_dir_all(&origin_path);
+            }
             let entry = SymbolicEntry {
-                origin_path: join_origin_path(&app.config.origin_path_prefix, p_origin(app)),
+                origin_path,
                 target_path: expand_path(p_target(app), &app.home),
                 add_datetime: chrono::Local::now()
                     .format("%Y-%m-%d %H:%M:%S %3f")

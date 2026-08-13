@@ -159,6 +159,10 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
             };
             // Expand a leading ~ / $HOME in the target path as well
             let target = expand_path(&target, &app.home);
+            // 源路径可能被修改，确保新源路径对应的文件夹存在（含嵌套目录）
+            if !origin.is_empty() {
+                let _ = std::fs::create_dir_all(&origin);
+            }
             // Remove the old key, then insert under the current name
             app.config.symbolic.remove(&key);
             app.config.symbolic.insert(
