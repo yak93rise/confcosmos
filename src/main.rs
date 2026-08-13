@@ -1,5 +1,6 @@
 mod app;
 mod config;
+mod pages;
 mod ui;
 
 use std::io::{self, Write};

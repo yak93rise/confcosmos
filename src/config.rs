@@ -72,7 +72,10 @@ pub fn expand_path(input: &str, home: &str) -> String {
     if let Some(rest) = input.strip_prefix("~/") {
         return format!("{}/{}", home, rest);
     }
-    for (prefix, rest) in [("$HOME", input.strip_prefix("$HOME")), ("${HOME}", input.strip_prefix("${HOME}"))] {
+    for (prefix, rest) in [
+        ("$HOME", input.strip_prefix("$HOME")),
+        ("${HOME}", input.strip_prefix("${HOME}")),
+    ] {
         if let Some(rest) = rest {
             let _ = prefix;
             if rest.is_empty() {
@@ -113,10 +116,19 @@ mod tests {
 
     #[test]
     fn join_origin() {
-        assert_eq!(join_origin_path("/home/user/src", "a/b"), "/home/user/src/a/b");
-        assert_eq!(join_origin_path("/home/user/src/", "a/b"), "/home/user/src/a/b");
+        assert_eq!(
+            join_origin_path("/home/user/src", "a/b"),
+            "/home/user/src/a/b"
+        );
+        assert_eq!(
+            join_origin_path("/home/user/src/", "a/b"),
+            "/home/user/src/a/b"
+        );
         assert_eq!(join_origin_path("", "a/b"), "a/b");
-        assert_eq!(join_origin_path("/home/user/src", "/abs/path"), "/home/user/src/abs/path");
+        assert_eq!(
+            join_origin_path("/home/user/src", "/abs/path"),
+            "/home/user/src/abs/path"
+        );
     }
 
     #[test]
@@ -130,7 +142,10 @@ mod tests {
         let cfg = Config::default();
         cfg.save(&path).unwrap();
         let s = std::fs::read_to_string(&path).unwrap();
-        assert!(s.contains("[symbolic]"), "empty [symbolic] table must be present: {s:?}");
+        assert!(
+            s.contains("[symbolic]"),
+            "empty [symbolic] table must be present: {s:?}"
+        );
 
         let loaded: Config = toml::from_str(&s).unwrap();
         assert!(loaded.symbolic.is_empty());
