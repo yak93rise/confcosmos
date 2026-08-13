@@ -16,6 +16,7 @@ use crate::ui::{box_and_hints, draw_hints, HIGHLIGHT};
 // generate page
 // ---------------------------------------------------------------------------
 
+#[derive(Clone)]
 pub enum GenStatus {
     Success,
     Exists,
@@ -145,25 +146,42 @@ pub fn handle_generate(app: &mut App, key: KeyEvent) {
 }
 
 /// 生成结束后，把结果中成功创建的条目标记为 already_generate = true，
-/// 并记录生成时间 generate_datetime，然后保存配置
+/// 并记录生成时间 generate_datetime，然后保存配置。
+/// 若目标软链接已存在（GenStatus::Exists）且 generate_datetime 为 0，
+/// 则将生成时间记为新增时间 add_datetime（软链接很可能是新增时创建的）。
 /// （结果保存在 GeneratePage.results 里，动作处理时页面借已释放）。
 fn mark_generated(app: &mut App) {
-    let generated: Vec<String> = match &app.page {
+    let generated: Vec<(String, GenStatus)> = match &app.page {
         Page::Generate(p) => p
             .results
             .iter()
-            .filter(|(_, st)| matches!(st, GenStatus::Success))
-            .map(|(name, _)| name.clone())
+            .filter(|(_, st)| {
+                matches!(st, GenStatus::Success) || matches!(st, GenStatus::Exists)
+            })
+            .cloned()
             .collect(),
         _ => return,
     };
     let now = chrono::Local::now().timestamp_millis();
     let mut changed = false;
-    for name in generated {
+    for (name, status) in generated {
         if let Some(entry) = app.config.symbolic.get_mut(&name) {
-            entry.generate_datetime = now;
-            entry.already_generate = true;
-            changed = true;
+            match status {
+                GenStatus::Success => {
+                    entry.generate_datetime = now;
+                    entry.already_generate = true;
+                    changed = true;
+                }
+                GenStatus::Exists => {
+                    // 软链接已存在：如果尚未记录生成时间，则使用新增时间
+                    if entry.generate_datetime == 0 {
+                        entry.generate_datetime = entry.add_datetime;
+                        entry.already_generate = true;
+                        changed = true;
+                    }
+                }
+                GenStatus::Failed(_) => {}
+            }
         }
     }
     if changed {
