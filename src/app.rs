@@ -4,7 +4,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 
 use crate::config::{expand_path, join_origin_path, Config, SymbolicEntry};
 
-pub const MENU_ITEMS: [&str; 4] = ["新增软链接", "查看软链接", "生成软链接", "设置"];
+pub const MENU_ITEMS: [&str; 4] = ["查看软链接", "新增软链接", "生成软链接", "设置"];
 
 // ---------------------------------------------------------------------------
 // Pages
