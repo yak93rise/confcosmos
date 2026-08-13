@@ -14,6 +14,9 @@ pub struct SymbolicEntry {
     pub target_path: String,
     /// Human readable millisecond timestamp, e.g. "2024-01-15 14:30:22 123"
     pub add_datetime: String,
+    /// Whether the symlink has already been generated
+    #[serde(default)]
+    pub already_generate: bool,
 }
 
 /// Root config of `confcosmos.toml`
@@ -168,6 +171,7 @@ mod tests {
                 origin_path: "/home/user/src/vimrc".into(),
                 target_path: "/home/user/.vimrc".into(),
                 add_datetime: "2024-01-15 14:30:22 123".into(),
+                already_generate: false,
             },
         );
         std::fs::create_dir_all(&dir).unwrap();

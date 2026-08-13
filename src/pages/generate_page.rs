@@ -68,6 +68,8 @@ impl GeneratePage {
 enum GenAction {
     None,
     Back,
+    /// 生成完成，把成功创建的条目标记为 already_generate = true
+    MarkGenerated,
 }
 
 pub fn handle_generate(app: &mut App, key: KeyEvent) {
@@ -102,10 +104,11 @@ pub fn handle_generate(app: &mut App, key: KeyEvent) {
                                 if p.checks.iter().any(|&c| c) {
                                     p.results = generate_selected(&p.checks, &p.entries);
                                     p.mode = GenMode::Results;
+                                    GenAction::MarkGenerated
                                 } else {
                                     p.notice = Some("未选择任何软链接".to_string());
+                                    GenAction::None
                                 }
-                                GenAction::None
                             }
                             // 返回
                             _ => GenAction::Back,
@@ -137,6 +140,33 @@ pub fn handle_generate(app: &mut App, key: KeyEvent) {
     match action {
         GenAction::None => {}
         GenAction::Back => app.go_main(),
+        GenAction::MarkGenerated => mark_generated(app),
+    }
+}
+
+/// 生成结束后，把结果中成功创建的条目标记为 already_generate = true
+/// 并保存配置（结果保存在 GeneratePage.results 里，动作处理时页面借已释放）。
+fn mark_generated(app: &mut App) {
+    let generated: Vec<String> = match &app.page {
+        Page::Generate(p) => p
+            .results
+            .iter()
+            .filter(|(_, st)| matches!(st, GenStatus::Success))
+            .map(|(name, _)| name.clone())
+            .collect(),
+        _ => return,
+    };
+    let mut changed = false;
+    for name in generated {
+        if let Some(entry) = app.config.symbolic.get_mut(&name) {
+            if !entry.already_generate {
+                entry.already_generate = true;
+                changed = true;
+            }
+        }
+    }
+    if changed {
+        app.save_config();
     }
 }
 

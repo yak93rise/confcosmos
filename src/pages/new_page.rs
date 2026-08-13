@@ -207,6 +207,8 @@ pub fn handle_new(app: &mut App, key: KeyEvent) {
                 add_datetime: chrono::Local::now()
                     .format("%Y-%m-%d %H:%M:%S %3f")
                     .to_string(),
+                // 新增的软链接尚未生成
+                already_generate: false,
             };
             app.config.symbolic.insert(p_name(app).to_string(), entry);
             app.save_config();

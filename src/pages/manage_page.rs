@@ -24,6 +24,7 @@ pub struct ManagePage {
     pub origin_path: String,
     pub target_path: String,
     pub add_datetime: String,
+    pub already_generate: bool,
     /// View list index to restore when returning
     pub back_selected: usize,
     pub focus: NewFocus,
@@ -50,6 +51,7 @@ impl ManagePage {
             origin_path: entry.origin_path,
             target_path: entry.target_path,
             add_datetime: entry.add_datetime,
+            already_generate: entry.already_generate,
             back_selected,
             focus: NewFocus::Buttons,
             selected: 0,
@@ -146,13 +148,14 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
     match action {
         ManageAction::None | ManageAction::Edit => {}
         ManageAction::Commit => {
-            let (key, name, origin, target, dt) = if let Page::Manage(p) = &app.page {
+            let (key, name, origin, target, dt, already) = if let Page::Manage(p) = &app.page {
                 (
                     p.key.clone(),
                     p.symbolic_name.clone(),
                     p.origin_path.clone(),
                     p.target_path.clone(),
                     p.add_datetime.clone(),
+                    p.already_generate,
                 )
             } else {
                 return;
@@ -171,6 +174,7 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
                     origin_path: origin,
                     target_path: target,
                     add_datetime: dt,
+                    already_generate: already,
                 },
             );
             app.save_config();
