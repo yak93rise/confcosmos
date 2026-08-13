@@ -5,7 +5,7 @@ author = "yak93rise"
 repository = "https://github.com/yak93rise/confcosmos.git"
 version = "0.1.0"
 edition = "2021"
-license = "GPLv2"
+license = "GPL-2.0"
 
 [dependencies]
 ratatui = "0.29"
