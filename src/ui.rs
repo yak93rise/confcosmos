@@ -14,6 +14,21 @@ pub(crate) fn width(s: &str) -> u16 {
     s.chars().map(|c| if c.is_ascii() { 1 } else { 2 }).sum()
 }
 
+/// 把 epoch 毫秒时间戳格式化为本地时间 "YYYY-MM-DD HH:MM:SS"；
+/// 0 表示从未设置（未生成 / 未修改），显示 "—"。
+pub(crate) fn format_datetime(millis: i64) -> String {
+    if millis <= 0 {
+        return "—".to_string();
+    }
+    chrono::DateTime::from_timestamp_millis(millis)
+        .map(|dt| {
+            dt.with_timezone(&chrono::Local)
+                .format("%Y-%m-%d %H:%M:%S")
+                .to_string()
+        })
+        .unwrap_or_else(|| "—".to_string())
+}
+
 /// 渲染当前激活的页面。每个页面模块拥有自己的 `draw_<name>` 函数。
 pub fn draw(frame: &mut Frame, app: &App) {
     match &app.page {

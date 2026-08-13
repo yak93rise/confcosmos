@@ -144,8 +144,9 @@ pub fn handle_generate(app: &mut App, key: KeyEvent) {
     }
 }
 
-/// 生成结束后，把结果中成功创建的条目标记为 already_generate = true
-/// 并保存配置（结果保存在 GeneratePage.results 里，动作处理时页面借已释放）。
+/// 生成结束后，把结果中成功创建的条目标记为 already_generate = true，
+/// 并记录生成时间 generate_datetime，然后保存配置
+/// （结果保存在 GeneratePage.results 里，动作处理时页面借已释放）。
 fn mark_generated(app: &mut App) {
     let generated: Vec<String> = match &app.page {
         Page::Generate(p) => p
@@ -156,13 +157,13 @@ fn mark_generated(app: &mut App) {
             .collect(),
         _ => return,
     };
+    let now = chrono::Local::now().timestamp_millis();
     let mut changed = false;
     for name in generated {
         if let Some(entry) = app.config.symbolic.get_mut(&name) {
-            if !entry.already_generate {
-                entry.already_generate = true;
-                changed = true;
-            }
+            entry.generate_datetime = now;
+            entry.already_generate = true;
+            changed = true;
         }
     }
     if changed {

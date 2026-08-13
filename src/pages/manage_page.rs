@@ -10,7 +10,7 @@ use crate::config::{expand_path, SymbolicEntry};
 use crate::pages::confirm_page::ConfirmAction;
 use crate::pages::view_page::ViewPage;
 use crate::pages::NewFocus;
-use crate::ui::{box_and_hints, draw_hints, width, HIGHLIGHT};
+use crate::ui::{box_and_hints, draw_hints, format_datetime, width, HIGHLIGHT};
 
 // ---------------------------------------------------------------------------
 // symbolic_manage_page
@@ -23,7 +23,9 @@ pub struct ManagePage {
     pub symbolic_name: String,
     pub origin_path: String,
     pub target_path: String,
-    pub add_datetime: String,
+    pub add_datetime: i64,
+    pub generate_datetime: i64,
+    pub edit_datetime: i64,
     pub already_generate: bool,
     /// View list index to restore when returning
     pub back_selected: usize,
@@ -51,6 +53,8 @@ impl ManagePage {
             origin_path: entry.origin_path,
             target_path: entry.target_path,
             add_datetime: entry.add_datetime,
+            generate_datetime: entry.generate_datetime,
+            edit_datetime: entry.edit_datetime,
             already_generate: entry.already_generate,
             back_selected,
             focus: NewFocus::Buttons,
@@ -148,18 +152,20 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
     match action {
         ManageAction::None | ManageAction::Edit => {}
         ManageAction::Commit => {
-            let (key, name, origin, target, dt, already) = if let Page::Manage(p) = &app.page {
-                (
-                    p.key.clone(),
-                    p.symbolic_name.clone(),
-                    p.origin_path.clone(),
-                    p.target_path.clone(),
-                    p.add_datetime.clone(),
-                    p.already_generate,
-                )
-            } else {
-                return;
-            };
+            let (key, name, origin, target, dt, gen_dt, already) =
+                if let Page::Manage(p) = &app.page {
+                    (
+                        p.key.clone(),
+                        p.symbolic_name.clone(),
+                        p.origin_path.clone(),
+                        p.target_path.clone(),
+                        p.add_datetime,
+                        p.generate_datetime,
+                        p.already_generate,
+                    )
+                } else {
+                    return;
+                };
             // Expand a leading ~ / $HOME in the target path as well
             let target = expand_path(&target, &app.home);
             // 源路径可能被修改，确保新源路径对应的文件夹存在（含嵌套目录）
@@ -174,6 +180,9 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
                     origin_path: origin,
                     target_path: target,
                     add_datetime: dt,
+                    generate_datetime: gen_dt,
+                    // 修改时间：epoch 毫秒时间戳
+                    edit_datetime: chrono::Local::now().timestamp_millis(),
                     already_generate: already,
                 },
             );
@@ -214,13 +223,15 @@ pub fn handle_manage(app: &mut App, key: KeyEvent) {
 pub fn draw_manage(frame: &mut Frame, p: &ManagePage) {
     let area = frame.area();
     // name + origin + target + datetime + buttons + borders
-    let (box_area, hints) = box_and_hints(area, 8);
+    let (box_area, hints) = box_and_hints(area, 9);
 
     let block = Block::bordered().title("ConfCosmos - Manage");
     let inner = block.inner(box_area);
     frame.render_widget(block, box_area);
 
     let rows = Layout::vertical([
+        Constraint::Length(1),
+        Constraint::Length(1),
         Constraint::Length(1),
         Constraint::Length(1),
         Constraint::Length(1),
@@ -266,9 +277,13 @@ pub fn draw_manage(frame: &mut Frame, p: &ManagePage) {
         }
     }
 
-    // read-only datetime row
-    let dt_label = format!("新增时间: {}", p.add_datetime);
-    frame.render_widget(Paragraph::new(Span::raw(dt_label)), rows[3]);
+    // read-only datetime rows（毫秒时间戳格式化显示）
+    let dt_add = format!("新增时间: {}", format_datetime(p.add_datetime));
+    let dt_gen = format!("生成时间: {}", format_datetime(p.generate_datetime));
+    let dt_edit = format!("修改时间: {}", format_datetime(p.edit_datetime));
+    frame.render_widget(Paragraph::new(Span::raw(dt_add)), rows[3]);
+    frame.render_widget(Paragraph::new(Span::raw(dt_gen)), rows[4]);
+    frame.render_widget(Paragraph::new(Span::raw(dt_edit)), rows[5]);
 
     // operation buttons
     let mut spans: Vec<Span> = Vec::new();

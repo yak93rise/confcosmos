@@ -204,9 +204,10 @@ pub fn handle_new(app: &mut App, key: KeyEvent) {
             let entry = SymbolicEntry {
                 origin_path,
                 target_path: expand_path(p_target(app), &app.home),
-                add_datetime: chrono::Local::now()
-                    .format("%Y-%m-%d %H:%M:%S %3f")
-                    .to_string(),
+                // 新增时间：epoch 毫秒时间戳
+                add_datetime: chrono::Local::now().timestamp_millis(),
+                generate_datetime: 0,
+                edit_datetime: 0,
                 // 新增的软链接尚未生成
                 already_generate: false,
             };

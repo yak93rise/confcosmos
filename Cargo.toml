@@ -8,5 +8,6 @@ description = "A TUI tool for quickly creating symlinks, Linux only"
 ratatui = "0.29"
 crossterm = "0.28"
 toml = "0.8"
+toml_edit = "0.22"
 serde = { version = "1", features = ["derive"] }
 chrono = "0.4"
