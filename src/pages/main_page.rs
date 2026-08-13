@@ -20,8 +20,8 @@ pub fn handle_main(app: &mut App, key: KeyEvent) {
         KeyCode::Up => app.menu_selected = app.menu_selected.saturating_sub(1),
         KeyCode::Down => app.menu_selected = (app.menu_selected + 1).min(MENU_ITEMS.len() - 1),
         KeyCode::Enter => match app.menu_selected {
-            0 => app.page = Page::New(NewPage::new()),
-            1 => app.page = Page::View(ViewPage::from_config(&app.config)),
+            0 => app.page = Page::View(ViewPage::from_config(&app.config)),
+            1 => app.page = Page::New(NewPage::new()),
             2 => app.page = Page::Generate(GeneratePage::from_config(&app.config)),
             _ => {
                 app.page = Page::Settings(SettingsPage {
